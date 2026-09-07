@@ -1,7 +1,8 @@
 import os
 from functools import lru_cache
-from typing import Optional
+from typing import Optional, Any, Dict
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import model_validator
 
 IS_VERCEL = bool(os.environ.get("VERCEL"))
 
@@ -36,6 +37,17 @@ class Settings(BaseSettings):
     MAX_DISCOUNT_PERCENT: float = 10.0
     HIGH_VALUE_THRESHOLD_INR: float = 100000.0
     MIN_AI_CONFIDENCE: float = 0.60
+
+    @model_validator(mode="before")
+    @classmethod
+    def drop_empty_strings(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Vercel sets env vars from .env with empty string values (e.g. AI_TIMEOUT_SECONDS='').
+        Pydantic can't parse '' as int/float. Drop empty strings so defaults kick in.
+        """
+        if isinstance(values, dict):
+            return {k: v for k, v in values.items() if v != ""}
+        return values
 
     model_config = SettingsConfigDict(
         env_file=".env" if not IS_VERCEL else None,
