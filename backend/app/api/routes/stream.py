@@ -2,14 +2,16 @@
 Server-Sent Events (SSE) Streaming Route
 
 Streams real-time recovery case updates, step transitions, and metric changes to the frontend UI.
+On Vercel serverless, SSE is not supported — returns a JSON status fallback.
 """
 import asyncio
 import json
 import logging
 from fastapi import APIRouter, Request
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, JSONResponse
 
 from app.core.event_bus import event_bus
+from app.core.config import IS_VERCEL
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -23,7 +25,18 @@ async def sse_events_stream(request: Request):
     - GUARDIAN_DECISION
     - WEBHOOK_RECONCILED
     - BATCH_COMPLETED
+
+    On Vercel serverless, returns a JSON fallback since SSE requires
+    persistent connections.
     """
+    # Vercel serverless does not support long-lived SSE connections
+    if IS_VERCEL:
+        return JSONResponse({
+            "event": "SERVERLESS_MODE",
+            "message": "Real-time streaming is not available in serverless mode. Use polling instead.",
+            "polling_endpoint": "/api/v1/metrics/live",
+        })
+
     queue = event_bus.subscribe()
 
     async def event_generator():
@@ -59,3 +72,4 @@ async def sse_events_stream(request: Request):
             "X-Accel-Buffering": "no",
         },
     )
+

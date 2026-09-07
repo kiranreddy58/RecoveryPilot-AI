@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
-from app.core.config import get_settings
+from app.core.config import get_settings, IS_VERCEL
 
 settings = get_settings()
 
@@ -45,6 +45,19 @@ def init_db():
                 conn.commit()
             except Exception:
                 pass
+
+    # Auto-seed demo data on Vercel cold starts
+    if IS_VERCEL:
+        try:
+            from app.core.seed import seed_demo_data
+            db = SessionLocal()
+            try:
+                seed_demo_data(db)
+            finally:
+                db.close()
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).warning(f"Seed failed (non-fatal): {e}")
 
 # Run on import to ensure test clients always have current schema
 try:

@@ -3,13 +3,15 @@ from functools import lru_cache
 from typing import Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+IS_VERCEL = bool(os.environ.get("VERCEL"))
+
 class Settings(BaseSettings):
     # App
-    APP_ENV: str = "development"
+    APP_ENV: str = "production" if IS_VERCEL else "development"
     BACKEND_HOST: str = "0.0.0.0"
     BACKEND_PORT: int = 8000
-    DATABASE_URL: str = "sqlite:////tmp/recoverypilot.db" if os.environ.get("VERCEL") else "sqlite:///./recoverypilot.db"
-    FRONTEND_URL: str = "http://localhost:5173"
+    DATABASE_URL: str = "sqlite:////tmp/recoverypilot.db" if IS_VERCEL else "sqlite:///./recoverypilot.db"
+    FRONTEND_URL: str = "https://recovery-pilot-ai.vercel.app" if IS_VERCEL else "http://localhost:5173"
     LOG_LEVEL: str = "INFO"
     APP_VERSION: str = "1.0.0"
 
@@ -35,7 +37,11 @@ class Settings(BaseSettings):
     HIGH_VALUE_THRESHOLD_INR: float = 100000.0
     MIN_AI_CONFIDENCE: float = 0.60
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=".env" if not IS_VERCEL else None,
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
 
 @lru_cache
 def get_settings() -> Settings:

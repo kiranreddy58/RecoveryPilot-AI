@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime, timezone
 
 from app.core.database import get_db
+from app.core.config import IS_VERCEL
 from app.models.business import BatchRun
 from app.schemas.base import BaseResponse
 from app.workers.batch_processor import run_batch_processing
@@ -26,8 +27,10 @@ def run_batch(
     """
     if target_count < 1:
         return BaseResponse(success=False, error="target_count must be at least 1")
-    if target_count > 1000:
-        target_count = 1000
+    # Cap at 50 on Vercel (10s serverless timeout), 1000 locally
+    max_allowed = 50 if IS_VERCEL else 1000
+    if target_count > max_allowed:
+        target_count = max_allowed
 
     metrics = run_batch_processing(db, target_count)
     return BaseResponse(success=True, data=metrics)
