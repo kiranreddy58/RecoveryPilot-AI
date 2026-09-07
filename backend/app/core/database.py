@@ -17,6 +17,14 @@ Base = declarative_base()
 def get_db():
     db = SessionLocal()
     try:
+        if IS_VERCEL:
+            from app.models.cases import RecoveryCase
+            try:
+                if db.query(RecoveryCase).count() == 0:
+                    from app.core.seed import seed_demo_data
+                    seed_demo_data(db)
+            except Exception:
+                pass
         yield db
     finally:
         db.close()

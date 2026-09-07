@@ -193,6 +193,8 @@ def seed_demo_data(db: Session):
     from app.models.audit import CaseAuditEvent
     from app.models.business import BatchRun
 
+    from app.domain.enums import CaseType, CaseState, RiskLevel, Priority
+
     # Skip if data already exists
     existing = db.query(RecoveryCase).count()
     if existing > 0:
@@ -206,18 +208,23 @@ def seed_demo_data(db: Session):
         case_id = f"DEMO-{str(uuid.uuid4())[:8].upper()}"
         created_at = now - timedelta(hours=demo["hours_ago"])
 
+        c_type = CaseType(demo["case_type"]) if demo.get("case_type") in CaseType.__members__ else CaseType.PAYMENT_FAILURE
+        c_status = CaseState(demo["status"]) if demo.get("status") in CaseState.__members__ else CaseState.DETECTED
+        c_risk = RiskLevel(demo["risk_level"]) if demo.get("risk_level") in RiskLevel.__members__ else None
+        c_priority = Priority(demo["priority"]) if demo.get("priority") in Priority.__members__ else None
+
         case = RecoveryCase(
             id=str(uuid.uuid4()),
             case_id=case_id,
             merchant_id="DEMO_MERCHANT",
             customer_id=f"CUST-{str(uuid.uuid4())[:6].upper()}",
-            case_type=demo["case_type"],
+            case_type=c_type,
             reference_id=f"REF-{str(uuid.uuid4())[:6].upper()}",
             amount_at_risk=demo["amount"],
             currency="INR",
-            status=demo["status"],
-            risk_level=demo["risk_level"],
-            priority=demo["priority"],
+            status=c_status,
+            risk_level=c_risk,
+            priority=c_priority,
             retry_count=demo.get("retry_count", 0),
             message_count=0,
             confidence=demo["confidence"],
@@ -226,7 +233,7 @@ def seed_demo_data(db: Session):
             recovered_amount=demo["recovered"],
             guardian_status=demo.get("guardian_status"),
             guardian_reason=demo.get("guardian_reason"),
-            recovery_verified="VERIFIED" if demo["recovered"] > 0 else "UNVERIFIED",
+            recovery_verified="VERIFIED_SUCCESS" if demo["recovered"] > 0 else "UNKNOWN",
             extra_data={},
             created_at=created_at,
         )
