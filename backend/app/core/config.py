@@ -1,3 +1,4 @@
+import os
 from functools import lru_cache
 from typing import Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -7,7 +8,7 @@ class Settings(BaseSettings):
     APP_ENV: str = "development"
     BACKEND_HOST: str = "0.0.0.0"
     BACKEND_PORT: int = 8000
-    DATABASE_URL: str = "sqlite:///./recoverypilot.db"
+    DATABASE_URL: str = "sqlite:////tmp/recoverypilot.db" if os.environ.get("VERCEL") else "sqlite:///./recoverypilot.db"
     FRONTEND_URL: str = "http://localhost:5173"
     LOG_LEVEL: str = "INFO"
     APP_VERSION: str = "1.0.0"
