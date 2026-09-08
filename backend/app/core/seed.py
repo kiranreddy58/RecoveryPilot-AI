@@ -246,9 +246,9 @@ def seed_demo_data(db: Session):
                 case_id=case_id,
                 root_cause=demo["root_cause"],
                 confidence=demo.get("confidence", 0.8),
-                details=f"Automated diagnosis for {demo['case_type'].replace('_', ' ').lower()}",
+                root_cause_detail=f"Automated diagnosis for {demo['case_type'].replace('_', ' ').lower()}",
                 ai_model="llama-3.3-70b-versatile",
-                provider="mock",
+                ai_provider="mock",
                 created_at=created_at + timedelta(seconds=2),
             )
             db.add(diagnosis)
@@ -306,8 +306,7 @@ def seed_demo_data(db: Session):
                 action_type=demo.get("strategy", "RETRY_PAYMENT"),
                 status="VERIFIED_SUCCESS",
                 idempotency_key=f"idemp_{case_id}_{str(uuid.uuid4())[:8]}",
-                provider_response={"status": "success", "amount": demo["recovered"]},
-                amount_recovered=demo["recovered"],
+                output_data={"status": "success", "amount": demo["recovered"]},
                 created_at=created_at + timedelta(seconds=8),
             )
             db.add(action)

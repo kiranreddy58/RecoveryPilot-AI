@@ -95,6 +95,15 @@ export function Dashboard() {
                 <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-ping" />
                 LIVE STREAM
               </span>
+            ) : metrics ? (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wider bg-[#ECFDF5] text-[#059669] border border-[#A7F3D0]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]" />
+                ONLINE • AUTO-SYNC
+              </span>
+            ) : error ? (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#FEF2F2] text-[#EF4444] border border-[#FECACA]">
+                OFFLINE
+              </span>
             ) : (
               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#F3F4F6] text-[#6B7280] border border-[#E5E7EB]">
                 CONNECTING...
