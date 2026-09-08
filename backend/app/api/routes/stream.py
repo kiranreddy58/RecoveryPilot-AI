@@ -29,13 +29,24 @@ async def sse_events_stream(request: Request):
     On Vercel serverless, returns a JSON fallback since SSE requires
     persistent connections.
     """
-    # Vercel serverless does not support long-lived SSE connections
+    # Vercel serverless does not support long-lived SSE connections — send clean SSE event and close
     if IS_VERCEL:
-        return JSONResponse({
-            "event": "SERVERLESS_MODE",
-            "message": "Real-time streaming is not available in serverless mode. Use polling instead.",
-            "polling_endpoint": "/api/v1/metrics/live",
-        })
+        async def serverless_generator():
+            msg = json.dumps({
+                "event": "SERVERLESS_MODE",
+                "message": "Real-time SSE streaming is disabled in serverless mode. Polling is active.",
+            })
+            yield f"data: {msg}\n\n"
+
+        return StreamingResponse(
+            serverless_generator(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache, no-transform",
+                "Connection": "keep-alive",
+                "X-Accel-Buffering": "no",
+            },
+        )
 
     queue = event_bus.subscribe()
 
